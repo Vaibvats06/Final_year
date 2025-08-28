@@ -1,4 +1,3 @@
-# ArcFace + FAISS Real-Time Face Recognition with GPU Support
 import cv2
 import numpy as np
 import insightface
@@ -6,19 +5,20 @@ import faiss
 import os
 import time
 import onnxruntime as ort
-# check when code is not load on gpu
+import matplotlib.pyplot as plt
+
 print("Available ONNX Providers:", ort.get_available_providers())
 
 # ================== INIT INSIGHTFACE MODEL ====================
-# Use GPU if available
-model = insightface.app.FaceAnalysis(name='buffalo_l', providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
-model.prepare(ctx_id=0)  # ctx_id=0 uses GPU if available
+# CPU only
+model = insightface.app.FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
+model.prepare(ctx_id=-1)   # -1 forces CPU
 # print("Context ID used:", model.ctx_id)
+
 
 # ================== FAISS INITIALIZATION ======================
 face_db = []
 names = []
-
 index = None  # FAISS index
 
 # ================== REGISTER KNOWN FACES ======================
@@ -30,17 +30,17 @@ def register_face(name, image_path):
 
     faces = model.get(img)
     if not faces:
-        print("No face detected in", image_path)
+        print("No face detected in ", image_path)
         return
 
-    embedding = faces[0].embedding
+    embedding = faces[0].normed_embedding   # normalized
     face_db.append(embedding)
     names.append(name)
     print(f"{name} registered successfully.")
 
 # ================== LOAD FACES FROM FOLDER ====================
 def load_faces():
-    people_folder = "known_faces"
+    people_folder = "known_faces/"
     for person_name in os.listdir(people_folder):
         person_path = os.path.join(people_folder, person_name)
         if not os.path.isdir(person_path):
@@ -53,7 +53,7 @@ def load_faces():
     global index
     if face_db:
         face_dim = len(face_db[0])
-        index = faiss.IndexFlatL2(face_dim)
+        index = faiss.IndexFlatIP(face_dim)   # cosine similarity on CPU
         index.add(np.array(face_db).astype('float32'))
     else:
         print("No known faces found.")
@@ -61,11 +61,13 @@ def load_faces():
 # ================== REAL-TIME FACE RECOGNITION ================
 def recognize_faces():
     cap = cv2.VideoCapture(0)
-    os.makedirs("known_faces/vaibhav", exist_ok=True)
+    os.makedirs("known_faces/", exist_ok=True)
 
     if not cap.isOpened():
         print("Error: Could not access the webcam.")
         return
+    if len(faces) == 0:
+       cv2.putText(frame, "No one detected", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
 
     print("Press 'a' to save a frame, 'q' to quit.")
 
@@ -77,12 +79,12 @@ def recognize_faces():
         faces = model.get(frame)
 
         for face in faces:
-            emb = np.expand_dims(face.embedding, axis=0).astype('float32')
+            emb = np.expand_dims(face.normed_embedding, axis=0).astype('float32')
             label = "Unknown"
 
             if index is not None and len(face_db) > 0:
                 D, I = index.search(emb, k=1)
-                if D[0][0] < 1.2:
+                if D[0][0] > 0.3:   # cosine similarity threshold
                     label = names[I[0][0]]
 
             box = face.bbox.astype(int)
@@ -96,8 +98,13 @@ def recognize_faces():
         if key == ord('a'):
             timestamp = time.strftime("%Y%m%d_%H%M%S")
             path = f"known_faces/vaibhav/captured_{timestamp}.jpg"
-            cv2.imwrite(path, frame)
-            print(f"[INFO] Saved to: {path}")
+            if faces:
+                box = faces[0].bbox.astype(int)
+                face_crop = frame[box[1]:box[3], box[0]:box[2]]
+                cv2.imwrite(path, face_crop)
+                print(f"[INFO] Cropped face saved to: {path}")
+            else:
+                print("[WARN] No face detected to save.")
 
         elif key == ord('q'):
             break
