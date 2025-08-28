@@ -4,4 +4,4 @@ venv/
 # Ignore known faces folder
 known_faces/
 
-.* venvrun.txt
+venvrun.txt
