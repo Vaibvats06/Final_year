@@ -1,7 +1,17 @@
-import sys
+from pymongo import MongoClient
+import datetime
 
-# Make sure this path points exactly to your 4.7.0 cv2 folder
-sys.path.insert(0, r"C:\Users\vats8\Desktop\Final_year\libs")
+MONGO_URI = "mongodb+srv://vats88690:tt3CAmKJMhkR4glN@cluster0.ggydqss.mongodb.net/"  
+client = MongoClient(MONGO_URI)
 
-import cv2
-print(cv2.__version__)
+db = client["face_recognition_db"]  
+collection = db["recognized_faces"]  
+
+# Test insert
+doc = {
+    "name": "Vaibhav",
+    "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+}
+
+result = collection.insert_one(doc)
+print("Inserted ID:", result.inserted_id)

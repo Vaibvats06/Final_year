@@ -1,1 +1,1 @@
-cd C:\Users\vats8\Desktop\Final_year.\venv\Scripts\activate
+venv\Scripts\activate

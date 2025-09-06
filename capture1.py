@@ -7,6 +7,9 @@ import time
 import onnxruntime as ort
 import matplotlib.pyplot as plt
 
+#import database
+from pymongo import MongoClient
+
 print("Available ONNX Providers:", ort.get_available_providers())
 
 # ================== INIT INSIGHTFACE MODEL ====================
@@ -20,6 +23,19 @@ model.prepare(ctx_id=-1)   # -1 forces CPU
 face_db = []
 names = []
 index = None  # FAISS index
+
+#mongo Atlas could connection
+MONGO_URI = "mongodb+srv://vats88690:tt3CAmKJMhkR4glN@cluster0.ggydqss.mongodb.net/"  
+client = MongoClient(MONGO_URI)   
+db = client["face_recognition_db"]  
+collection = db["recognized_faces"] 
+
+def save_to_mongo(name): 
+    """Save recognized face to MongoDB Atlas"""
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    record = {"timestamp": timestamp, "name": name}
+    collection.insert_one(record)
+    print(f"[CloudDB] Saved: {record}")
 
 # ================== REGISTER KNOWN FACES ======================
 def register_face(name, image_path):
@@ -66,8 +82,7 @@ def recognize_faces():
     if not cap.isOpened():
         print("Error: Could not access the webcam.")
         return
-    if len(faces) == 0:
-       cv2.putText(frame, "No one detected", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
+    
 
     print("Press 'a' to save a frame, 'q' to quit.")
 
@@ -91,6 +106,9 @@ def recognize_faces():
             cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
             cv2.putText(frame, label, (box[0], box[1] - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+
+  # ✅ Save recognized face to MongoDB Atlas
+        save_to_mongo(label)
 
         cv2.imshow("Real-Time Face Recognition", frame)
         key = cv2.waitKey(1) & 0xFF
