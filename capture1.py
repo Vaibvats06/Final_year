@@ -132,11 +132,7 @@ def recognize_faces():
             timestamp = time.strftime("%Y%m%d_%H%M%S")
             path = f"known_faces/vaibhav/captured_{timestamp}.jpg"
             if faces:
-                # box = faces[0].bbox.astype(int)
-                # face_crop = frame[box[1]:box[3], box[0]:box[2]]
-                # cv2.imwrite(path, face_crop)
-                # print(f"[INFO] Cropped face saved to: {path}")
-
+                
 
                 for i, face in enumerate(faces):   # sabhi detected faces ke liye
                    box = face.bbox.astype(int)
