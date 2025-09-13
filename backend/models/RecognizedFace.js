@@ -6,6 +6,7 @@ const recognizedFaceSchema = new mongoose.Schema({
     roll_no: String,
     student_id: String,
     display_name: String
+    
   },
  { collection: 'recognized_faces' }); // Force correct collection name
 

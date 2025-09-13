@@ -73,7 +73,13 @@ def load_faces():
         index.add(np.array(face_db).astype('float32'))
     else:
         print("No known faces found.")
-
+def clear_old_faces():
+    folder = "known_faces/"
+    for root, dirs, files in os.walk(folder):
+        for file in files:
+            if file.startswith("captured_"):
+                os.remove(os.path.join(root, file))
+    print("[CLEANUP] Old captured images removed.")
 # ================== REAL-TIME FACE RECOGNITION ================
 def recognize_faces():
     cap = cv2.VideoCapture(0)
@@ -85,6 +91,7 @@ def recognize_faces():
     
 
     print("Press 'a' to save a frame, 'q' to quit.")
+    attendance_set = set()
 
     while True:
         ret, frame = cap.read()
@@ -92,35 +99,54 @@ def recognize_faces():
             break
 
         faces = model.get(frame)
+        if not faces:
+            # 🔵 UPDATE: IoT trigger when no one found
+            print("🚫 No one found in class (IoT trigger)")
+        else:
+            for face in faces:
+                emb = np.expand_dims(face.normed_embedding, axis=0).astype('float32')
+                label = "Unknown"
 
-        for face in faces:
-            emb = np.expand_dims(face.normed_embedding, axis=0).astype('float32')
-            label = "Unknown"
-
-            if index is not None and len(face_db) > 0:
-                D, I = index.search(emb, k=1)
-                if D[0][0] > 0.3:   # cosine similarity threshold
+                if index is not None and len(face_db) > 0:
+                   D, I = index.search(emb, k=1)
+                   if D[0][0] > 0.3:   # cosine similarity threshold
                     label = names[I[0][0]]
 
-            box = face.bbox.astype(int)
-            cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
-            cv2.putText(frame, label, (box[0], box[1] - 10),
+                box = face.bbox.astype(int)
+                cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+                cv2.putText(frame, label, (box[0], box[1] - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
 
+        
+
   # ✅ Save recognized face to MongoDB Atlas
-        save_to_mongo(label)
+                if label != "Unknown" and label not in attendance_set:
+                    save_to_mongo(label)
+                    attendance_set.add(label)
+                    print(f"[ATTENDANCE] {label} marked once ✅")
 
         cv2.imshow("Real-Time Face Recognition", frame)
-        key = cv2.waitKey(1) & 0xFF
+        key = cv2.waitKey(6000) & 0xFF
 
         if key == ord('a'):
             timestamp = time.strftime("%Y%m%d_%H%M%S")
             path = f"known_faces/vaibhav/captured_{timestamp}.jpg"
             if faces:
-                box = faces[0].bbox.astype(int)
-                face_crop = frame[box[1]:box[3], box[0]:box[2]]
-                cv2.imwrite(path, face_crop)
-                print(f"[INFO] Cropped face saved to: {path}")
+                # box = faces[0].bbox.astype(int)
+                # face_crop = frame[box[1]:box[3], box[0]:box[2]]
+                # cv2.imwrite(path, face_crop)
+                # print(f"[INFO] Cropped face saved to: {path}")
+
+
+                for i, face in enumerate(faces):   # sabhi detected faces ke liye
+                   box = face.bbox.astype(int)
+                   face_crop = frame[box[1]:box[3], box[0]:box[2]]
+ 
+                   timestamp = time.strftime("%Y%m%d_%H%M%S")
+                   path = f"known_faces/vaibhav/captured_{timestamp}_{i}.jpg"
+                   cv2.imwrite(path, face_crop)
+                   print(f"[INFO] Cropped face {i} saved to: {path}")
+                
             else:
                 print("[WARN] No face detected to save.")
 
