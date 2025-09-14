@@ -123,7 +123,7 @@ def recognize_faces():
                 if label != "Unknown" and label not in attendance_set:
                     save_to_mongo(label)
                     attendance_set.add(label)
-                    print(f"[ATTENDANCE] {label} marked once ✅")
+                    print(f"[ATTENDANCE] {label} marked once ")
 
         cv2.imshow("Real-Time Face Recognition", frame)
         key = cv2.waitKey(6000) & 0xFF
