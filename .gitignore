@@ -5,3 +5,6 @@ venv/
 known_faces/
 
 venvrun.txt
+
+node_modules
+.env
