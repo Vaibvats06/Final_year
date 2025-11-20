@@ -1,6 +1,7 @@
 import React from 'react'
 import HomeImg from '../../assets/homeimg.png'
 import { Link } from 'react-router-dom'
+import Footer from '../Footer'
 
 const Homepage = () => {
   return (
@@ -14,8 +15,8 @@ const Homepage = () => {
             <p className='text-2xl mb-5'>Secure • Fast • Reliable</p>
 
             <div className='flex space-x-10'>
-              <Link to={'create-account'} className="btn btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl bg-[#0046FF] text-white rounded-md w-65">Create Organisation</Link>
-              <Link to={'/login'} className="btn btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl rounded-md  bg-[#0046FF] text-white w-60">Login</Link>
+              <Link to={'create-account'} className="btn btn-xs sm:btn-sm md:btn-md lg:btn-sm xl:btn-lg bg-[#0046FF] text-white rounded-md w-65">Create Organisation</Link>
+              <Link to={'/login'} className="btn btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-lg rounded-md  bg-[#0046FF] text-white w-60">Login</Link>
             </div>
           </div>
           <div className='min-w-[1/2]'>
@@ -23,6 +24,8 @@ const Homepage = () => {
           </div>  
         </div>
         </div>
+
+        <Footer />
       
     </div>
   )

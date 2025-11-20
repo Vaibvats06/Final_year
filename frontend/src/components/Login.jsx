@@ -32,10 +32,10 @@ const Login = () => {
           <p className="mx-auto text-xl font-semibold mb-10">Login</p>
 
           <label className="label">Email</label>
-          <input type="email" className="input" placeholder="Email" value={email} onChange={(e)=>{setEmail(e.target.value)}}/>
+          <input type="email" className="input" placeholder="Email" value={email} onChange={(e)=>{setEmail(e.target.value)}} required/>
 
           <label className="label">Password</label>
-          <input type="password" className="input" placeholder="Password" value={password} onChange={(e)=>{setPassword(e.target.value)}}/>
+          <input type="password" className="input" placeholder="Password" value={password} onChange={(e)=>{setPassword(e.target.value)}} required/>
 
           <select name="login-type" id="login" className="select w-full"
             value={loginType}

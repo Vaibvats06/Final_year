@@ -2,9 +2,9 @@
 venv/
 
 # Ignore known faces folder
-known_faces/
 
-venvrun.txt
+
+
 
 node_modules
 .env
